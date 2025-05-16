@@ -262,6 +262,13 @@ export class ApiDetailsResponseDto {
   })
   path: string;
 
+  
+  @ApiProperty({
+    description: 'Verion of the API',
+    example: 'v1',
+  })
+  version?: string;
+
   @ApiProperty({ description: 'HTTP method for the API', example: 'POST' })
   method: string;
 

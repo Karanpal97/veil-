@@ -263,6 +263,7 @@ export class OnboardingService {
       required_headers: headers,
       method: api.method,
       description: api.description,
+      version:api.version,
       documentation_url: api.documentationUrl,
       status: api.status,
       created_at: api.createdAt,

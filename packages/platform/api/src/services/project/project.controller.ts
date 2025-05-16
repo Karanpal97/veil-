@@ -15,6 +15,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
+import { TransferProjectDto} from "./dto/transferProject.dto"
 import {
   CreateProjectDto,
   UpdateProjectDto,
@@ -32,6 +33,7 @@ import {
   ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { number } from 'zod';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -188,5 +190,27 @@ export class ProjectController {
     @Req() req: any,
   ): Promise<void> {
     return this.projectService.removeApiFromProject(id, apiId, req.user.id);
+  }
+
+  @Post(':projectId/transfer')
+  @Roles('provider')
+  @UseGuards(RoleGuard)
+  @ApiOperation({ summary: 'Transfer a project to another user' })
+  @ApiParam({ name: 'projectId',type:number })
+  @ApiResponse({
+    status: 200,
+    description: 'Project transferred successfully',
+    type: ProjectResponseDto,
+  })
+  transferProject(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Body() transferDto: TransferProjectDto,
+    @Req() req: any,
+  ): Promise<ProjectResponseDto> {
+    return this.projectService.transferOwnership(
+      projectId,
+      req.user.id,
+      transferDto.newOwnerId,
+    );
   }
 }

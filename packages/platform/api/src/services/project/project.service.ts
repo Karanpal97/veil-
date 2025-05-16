@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {HubListingService } from "../hublisting/hublisting.service"
@@ -105,6 +106,53 @@ export class ProjectService {
       description: createProjectDto.description,
     };
   }
+
+  
+  
+async transferOwnership(
+  projectId: number,
+  currentUserId: string,
+  newOwnerId: string,
+): Promise<ProjectResponseDto> {
+  const project = await this.prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      projectAcls: true,
+    },
+  });
+
+  if (!project) {
+    throw new NotFoundException('Project not found');
+  }
+
+  const currentAcl = project.projectAcls.find(
+    (acl) => acl.userId === currentUserId
+  );
+
+  if (!currentAcl) {
+    throw new ForbiddenException('You are not part of this project');
+  }
+
+  // Update ownership: change userId in the ACL
+  await this.prisma.projectAcl.updateMany({
+    where: {
+      projectId,
+      userId: currentUserId,
+    },
+    data: {
+      userId: newOwnerId,
+    },
+  });
+
+  const updatedProject = await this.prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      projectAcls: true,
+    },
+  });
+
+  return updatedProject;
+}
 
   async findAllForConsumer(): Promise<ProjectResponseDto[]> {
     const projects = await this.prisma.project.findMany({
